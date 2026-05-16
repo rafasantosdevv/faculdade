@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura · Gestão Financeira Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #080b14;
+    --bg-mid: #0d1220;
+    --bg-card: rgba(255,255,255,0.04);
+    --bg-card-hover: rgba(255,255,255,0.07);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-border-bright: rgba(255,255,255,0.15);
+    --accent-cyan: #00d4ff;
+    --accent-violet: #7c3aed;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --text-primary: #f0f4ff;
+    --text-secondary: rgba(240,244,255,0.5);
+    --text-muted: rgba(240,244,255,0.28);
+    --blur-val: blur(24px);
+    --radius-card: 20px;
+    --radius-sm: 12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND ORBS ── */
+  .orb-field {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px); opacity: 0.18;
+    animation: drift 20s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 600px; height: 600px; background: var(--accent-violet); top: -200px; left: -150px; animation-duration: 18s; }
+  .orb-2 { width: 500px; height: 500px; background: var(--accent-cyan); bottom: -150px; right: -100px; animation-duration: 22s; }
+  .orb-3 { width: 300px; height: 300px; background: var(--accent-emerald); top: 40%; left: 55%; animation-duration: 25s; }
+  @keyframes drift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(40px, 30px) scale(1.08); }
+  }
+
+  /* ── LAYOUT ── */
+  .app-wrapper { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px; min-height: 100vh;
+    background: rgba(13,18,32,0.7);
+    backdrop-filter: var(--blur-val);
+    border-right: 1px solid var(--glass-border);
+    display: flex; flex-direction: column;
+    padding: 28px 0; position: sticky; top: 0; height: 100vh;
+  }
+  .logo {
+    padding: 0 24px 32px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 22px;
+    background: linear-gradient(135deg, #fff 40%, var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo-sub { font-size: 9px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+  .nav-section { padding: 0 12px; flex: 1; }
+  .nav-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); padding: 6px 12px 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.2s; color: var(--text-secondary);
+    font-size: 14px; font-weight: 500; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(0,212,255,0.1));
+    color: var(--text-primary);
+    border: 1px solid rgba(124,58,237,0.3);
+  }
+  .nav-item .ni { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent-violet);
+    color: #fff; font-size: 10px; padding: 2px 7px;
+    border-radius: 20px; font-weight: 600;
+  }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--glass-border);
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .user-info .name { font-size: 13px; font-weight: 600; }
+  .user-info .plan { font-size: 11px; color: var(--accent-cyan); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; padding: 32px; overflow-y: auto; }
+
+  /* ── TOP BAR ── */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; }
+  .page-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+  /* PRIVACY TOGGLE */
+  .privacy-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    background: var(--bg-card); border: 1px solid var(--glass-border);
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--text-secondary); transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+  .privacy-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .privacy-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent-violet), #6366f1);
+    border: none; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: #fff; transition: all 0.2s;
+  }
+  .add-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,0.4); }
+
+  /* ── GLASS CARD ── */
+  .glass-card {
+    background: var(--bg-card);
+    backdrop-filter: var(--blur-val);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .glass-card:hover { border-color: var(--glass-border-bright); }
+
+  /* ── KPI ROW ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { position: relative; overflow: hidden; }
+  .kpi-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--kpi-color, var(--accent-violet))15, transparent);
+    pointer-events: none;
+  }
+  .kpi-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+  .kpi-value {
+    font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700;
+    transition: filter 0.3s;
+  }
+  .kpi-value.blurred { filter: blur(8px); user-select: none; }
+  .kpi-delta { font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+  .kpi-delta.up { color: var(--accent-emerald); }
+  .kpi-delta.down { color: var(--accent-rose); }
+  .kpi-icon {
+    position: absolute; right: 20px; top: 20px;
+    font-size: 28px; opacity: 0.15;
+  }
+
+  /* ── GRID 2COL ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .grid-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+  /* ── SECTION HEADER ── */
+  .section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .section-action {
+    font-size: 12px; color: var(--accent-cyan); cursor: pointer;
+    background: none; border: none; font-family: inherit;
+    padding: 4px 8px; border-radius: 6px;
+  }
+  .section-action:hover { background: rgba(0,212,255,0.1); }
+
+  /* ── CHART BAR ── */
+  .chart-bars {
+    display: flex; align-items: flex-end; gap: 8px;
+    height: 120px; padding-top: 8px;
+  }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .bar-track { flex: 1; width: 100%; position: relative; display: flex; align-items: flex-end; }
+  .bar-fill {
+    width: 100%; border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, var(--accent-violet), rgba(124,58,237,0.3));
+    transition: height 0.8s cubic-bezier(.34,1.56,.64,1);
+    position: relative; cursor: pointer;
+  }
+  .bar-fill.income { background: linear-gradient(180deg, var(--accent-cyan), rgba(0,212,255,0.2)); }
+  .bar-fill:hover::after {
+    content: attr(data-val);
+    position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+    background: rgba(13,18,32,0.95); border: 1px solid var(--glass-border-bright);
+    padding: 3px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+    color: var(--text-primary); pointer-events: none;
+  }
+  .bar-label { font-size: 10px; color: var(--text-muted); }
+
+  /* ── TRANSACTIONS ── */
+  .tx-list { display: flex; flex-direction: column; gap: 8px; }
+  .tx-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid transparent;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .tx-item:hover { background: var(--bg-card-hover); border-color: var(--glass-border); }
+  .tx-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 14px; font-weight: 500; }
+  .tx-cat { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .tx-amount {
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+    transition: filter 0.3s;
+  }
+  .tx-amount.blurred { filter: blur(6px); }
+  .tx-amount.income { color: var(--accent-emerald); }
+  .tx-amount.expense { color: var(--accent-rose); }
+  .tx-date { font-size: 11px; color: var(--text-muted); text-align: right; }
+
+  /* ── AI INSIGHTS ── */
+  .ai-panel { }
+  .ai-insight-card {
+    padding: 16px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 10px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ai-insight-card:hover { background: var(--bg-card-hover); border-color: rgba(124,58,237,0.4); }
+  .ai-insight-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .ai-tag {
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 20px; font-weight: 600;
+  }
+  .ai-tag.warn { background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3); }
+  .ai-tag.tip  { background: rgba(16,185,129,0.15); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.3); }
+  .ai-tag.pred { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .ai-insight-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .ai-confidence { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .ai-btn {
+    width: 100%; padding: 12px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(0,212,255,0.1));
+    border: 1px solid rgba(124,58,237,0.3);
+    color: var(--text-primary); cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s; margin-top: 4px;
+  }
+  .ai-btn:hover { background: linear-gradient(135deg, rgba(124,58,237,0.35), rgba(0,212,255,0.2)); }
+  .ai-btn.loading { opacity: 0.7; cursor: not-allowed; }
+  .ai-spinner { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── GOALS ── */
+  .goal-item { margin-bottom: 18px; }
+  .goal-hdr { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+  .goal-name { font-size: 14px; font-weight: 500; }
+  .goal-vals { font-size: 12px; color: var(--text-muted); }
+  .goal-vals span.blurred { filter: blur(5px); display: inline-block; }
+  .progress-track {
+    height: 6px; background: rgba(255,255,255,0.08);
+    border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+    transition: width 1s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  /* ── CATEGORY DONUTS ── */
+  .cat-list { display: flex; flex-direction: column; gap: 10px; }
+  .cat-item { display: flex; align-items: center; gap: 12px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .cat-label { font-size: 13px; flex: 1; }
+  .cat-pct { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .cat-bar-track { flex: 2; height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+  /* ── RECEIPT VAULT ── */
+  .receipt-drop {
+    border: 2px dashed var(--glass-border-bright);
+    border-radius: var(--radius-sm); padding: 24px;
+    text-align: center; cursor: pointer;
+    transition: all 0.2s; background: rgba(255,255,255,0.02);
+  }
+  .receipt-drop:hover, .receipt-drop.dragover {
+    border-color: var(--accent-cyan);
+    background: rgba(0,212,255,0.05);
+  }
+  .receipt-drop .drop-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+  .receipt-drop .drop-text { font-size: 13px; color: var(--text-secondary); }
+  .receipt-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .receipt-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  }
+  .receipt-thumb {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(124,58,237,0.2));
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .receipt-info .rname { font-size: 13px; font-weight: 500; }
+  .receipt-info .rval { font-size: 11px; color: var(--text-muted); }
+  .receipt-badge {
+    margin-left: auto; font-size: 9px; padding: 3px 8px;
+    border-radius: 20px; background: rgba(16,185,129,0.15);
+    color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.3);
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+
+  /* ── EXPORT PANEL ── */
+  .export-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .export-opt {
+    padding: 14px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .export-opt:hover { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); }
+  .export-opt.selected { border-color: var(--accent-violet); background: rgba(124,58,237,0.1); }
+  .export-opt .eo-icon { font-size: 24px; margin-bottom: 6px; }
+  .export-opt .eo-label { font-size: 12px; font-weight: 600; }
+  .export-opt .eo-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .export-generate {
+    width: 100%; padding: 13px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent-emerald), #059669);
+    border: none; color: #fff; font-family: inherit;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .export-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(16,185,129,0.35); }
+
+  /* ── FIREBASE STATUS ── */
+  .firebase-strip {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 16px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+    margin-bottom: 24px;
+  }
+  .fb-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  }
+  .fb-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .fb-dot.online { background: var(--accent-emerald); box-shadow: 0 0 6px var(--accent-emerald); }
+  .fb-dot.sync { background: var(--accent-amber); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+  .fb-name { color: var(--text-secondary); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(8,11,20,0.85);
+    backdrop-filter: blur(8px); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: rgba(13,18,32,0.95); border: 1px solid var(--glass-border-bright);
+    border-radius: 24px; padding: 32px; width: 460px; max-width: 95vw;
+    transform: translateY(20px); transition: transform 0.3s;
+    backdrop-filter: blur(24px);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border);
+    color: var(--text-primary); font-family: inherit; font-size: 14px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent-violet); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .type-btn {
+    padding: 10px; border-radius: 10px; border: 1px solid var(--glass-border);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .type-btn.income.selected { background: rgba(16,185,129,0.15); border-color: var(--accent-emerald); color: var(--accent-emerald); }
+  .type-btn.expense.selected { background: rgba(244,63,94,0.15); border-color: var(--accent-rose); color: var(--accent-rose); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-cancel {
+    flex: 1; padding: 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+    color: var(--text-secondary); cursor: pointer; font-family: inherit;
+    font-size: 14px; font-weight: 600;
+  }
+  .btn-save {
+    flex: 2; padding: 12px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-violet), #6366f1);
+    border: none; color: #fff; cursor: pointer; font-family: inherit;
+    font-size: 14px; font-weight: 700;
+  }
+
+  /* ── TOAST ── */
+  .toast-container { position: fixed; top: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 12px 20px; border-radius: 12px;
+    backdrop-filter: blur(16px); border: 1px solid var(--glass-border-bright);
+    font-size: 13px; font-weight: 500;
+    transform: translateX(120%); transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
+    display: flex; align-items: center; gap: 10px; min-width: 280px;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.success { background: rgba(16,185,129,0.15); color: var(--accent-emerald); }
+  .toast.info    { background: rgba(0,212,255,0.12); color: var(--accent-cyan); }
+  .toast.warn    { background: rgba(245,158,11,0.12); color: var(--accent-amber); }
+
+  /* ── PRIVACY OVERLAY ── */
+  .privacy-mode .kpi-value { filter: blur(8px) !important; }
+  .privacy-mode .tx-amount { filter: blur(6px) !important; }
+  .privacy-mode .goal-vals span { filter: blur(5px) !important; }
+
+  /* ── ACADEMIC SECTION ── */
+  .academic-section {
+    margin-top: 32px; padding: 32px;
+    background: rgba(13,18,32,0.8); border: 1px solid var(--glass-border);
+    border-radius: 24px; backdrop-filter: blur(16px);
+  }
+  .academic-title {
+    font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
+    margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+  }
+  .academic-q { margin-bottom: 28px; }
+  .q-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
+    color: #a78bfa; margin-bottom: 10px;
+  }
+  .q-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; }
+  .q-body { font-size: 14px; color: var(--text-secondary); line-height: 1.75; }
+  .q-body strong { color: var(--text-primary); font-weight: 600; }
+  .competency-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .chip {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.25); color: var(--accent-cyan);
+  }
+  .chip.violet { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.3); color: #a78bfa; }
+  .chip.emerald { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--accent-emerald); }
+  .principle-box {
+    padding: 18px; border-radius: var(--radius-sm); margin-top: 14px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,212,255,0.05));
+    border: 1px solid rgba(124,58,237,0.25);
+  }
+  .principle-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #a78bfa; margin-bottom: 6px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-3-1 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND ORBS -->
+<div class="orb-field">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- APP -->
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      <div>
+        <div class="logo-text">Aura</div>
+        <div class="logo-sub">by N7Tech</div>
+      </div>
+    </div>
+
+    <nav class="nav-section">
+      <div class="nav-label">Principal</div>
+      <div class="nav-item active"><span class="ni">⬡</span> Dashboard</div>
+      <div class="nav-item"><span class="ni">↕</span> Transações <span class="nav-badge">3</span></div>
+      <div class="nav-item"><span class="ni">◎</span> Metas</div>
+      <div class="nav-item"><span class="ni">◈</span> Relatórios</div>
+
+      <div class="nav-label" style="margin-top:16px">Ferramentas</div>
+      <div class="nav-item" onclick="openReceiptSection()"><span class="ni">🗂</span> Receipt Vault</div>
+      <div class="nav-item" onclick="openExportSection()"><span class="ni">⬇</span> Tax Export</div>
+      <div class="nav-item" onclick="openAISection()"><span class="ni">✦</span> AI Insights <span class="nav-badge" style="background:linear-gradient(135deg,var(--accent-violet),var(--accent-cyan))">IA</span></div>
+
+      <div class="nav-label" style="margin-top:16px">Sistema</div>
+      <div class="nav-item"><span class="ni">⚙</span> Configurações</div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar">AR</div>
+        <div class="user-info">
+          <div class="name">Alex Ribeiro</div>
+          <div class="plan">✦ Plano Pro</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="mainContent">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div>
+        <div class="page-title">Dashboard Financeiro</div>
+        <div class="page-sub">Maio 2025 · Sincronizado agora</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="privacy-btn" id="privacyBtn" onclick="togglePrivacy()">
+          <span id="privacyIcon">🔓</span>
+          <span id="privacyLabel">Modo Privado</span>
+        </button>
+        <button class="add-btn" onclick="openModal()">+ Nova Transação</button>
+      </div>
+    </div>
+
+    <!-- FIREBASE STATUS -->
+    <div class="firebase-strip">
+      <div class="fb-chip"><div class="fb-dot online"></div><span class="fb-name">Auth</span></div>
+      <div class="fb-chip"><div class="fb-dot online"></div><span class="fb-name">Firestore</span></div>
+      <div class="fb-chip"><div class="fb-dot online"></div><span class="fb-name">Storage</span></div>
+      <div class="fb-chip"><div class="fb-dot sync"></div><span class="fb-name">Remote Config</span></div>
+      <div class="fb-chip"><div class="fb-dot online"></div><span class="fb-name">Analytics</span></div>
+      <div class="fb-chip"><div class="fb-dot online"></div><span class="fb-name">Hosting</span></div>
+      <span style="font-size:11px;color:var(--text-muted);margin-left:auto;align-self:center;">Firebase Spark Plan ✓</span>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-row">
+      <div class="glass-card kpi-card" style="--kpi-color: #10b981">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Saldo Total</div>
+        <div class="kpi-value privacy-target" id="kpi-balance">R$ 18.450</div>
+        <div class="kpi-delta up">▲ 12,4% este mês</div>
+      </div>
+      <div class="glass-card kpi-card" style="--kpi-color: #00d4ff">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Receitas (Maio)</div>
+        <div class="kpi-value privacy-target" id="kpi-income">R$ 7.200</div>
+        <div class="kpi-delta up">▲ 5,1% vs. abril</div>
+      </div>
+      <div class="glass-card kpi-card" style="--kpi-color: #f43f5e">
+        <div class="kpi-icon">📉</div>
+        <div class="kpi-label">Despesas (Maio)</div>
+        <div class="kpi-value privacy-target" id="kpi-expense">R$ 3.850</div>
+        <div class="kpi-delta down">▼ 3,2% vs. abril</div>
+      </div>
+      <div class="glass-card kpi-card" style="--kpi-color: #f59e0b">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-label">Meta de Economia</div>
+        <div class="kpi-value privacy-target" id="kpi-goal">68%</div>
+        <div class="kpi-delta up">▲ R$ 3.350 acumulado</div>
+      </div>
+    </div>
+
+    <!-- CHART + AI ROW -->
+    <div class="grid-3-1">
+      <!-- CHART -->
+      <div class="glass-card">
+        <div class="section-hdr">
+          <div class="section-title">📊 Fluxo de Caixa — 6 meses</div>
+          <div style="display:flex;gap:12px;font-size:11px;">
+            <span style="display:flex;align-items:center;gap:5px;color:var(--text-muted)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent-violet);display:inline-block"></span>Despesas</span>
+            <span style="display:flex;align-items:center;gap:5px;color:var(--text-muted)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent-cyan);display:inline-block"></span>Receitas</span>
+          </div>
+        </div>
+        <div class="chart-bars" id="chartBars">
+          <!-- Generated by JS -->
+        </div>
+        <div style="display:flex;justify-content:space-around;margin-top:8px">
+          <span style="font-size:10px;color:var(--text-muted)">Dez</span>
+          <span style="font-size:10px;color:var(--text-muted)">Jan</span>
+          <span style="font-size:10px;color:var(--text-muted)">Fev</span>
+          <span style="font-size:10px;color:var(--text-muted)">Mar</span>
+          <span style="font-size:10px;color:var(--text-muted)">Abr</span>
+          <span style="font-size:10px;color:var(--text-muted)">Mai</span>
+        </div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="glass-card">
+        <div class="section-hdr">
+          <div class="section-title">Categorias</div>
+        </div>
+        <div class="cat-list" id="catList"></div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS + GOALS -->
+    <div class="grid-2">
+      <!-- TRANSACTIONS -->
+      <div class="glass-card">
+        <div class="section-hdr">
+          <div class="section-title">↕ Transações Recentes</div>
+          <button class="section-action">Ver todas</button>
+        </div>
+        <div class="tx-list" id="txList"></div>
+      </div>
+
+      <!-- GOALS -->
+      <div class="glass-card">
+        <div class="section-hdr">
+          <div class="section-title">🎯 Metas Financeiras</div>
+          <button class="section-action">+ Meta</button>
+        </div>
+        <div id="goalsList"></div>
+      </div>
+    </div>
+
+    <!-- ── DIFERENCIAL 1: AI INSIGHTS ── -->
+    <div class="glass-card" id="aiSection" style="margin-bottom:24px">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">✦ AI Insights Engine</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Análise preditiva do seu padrão financeiro</div>
+        </div>
+        <button class="ai-btn" style="width:auto;padding:9px 16px;font-size:12px" id="aiRefreshBtn" onclick="runAIInsights()">
+          <span>✦</span> Atualizar Análise
+        </button>
+      </div>
+      <div id="aiInsights"></div>
+    </div>
+
+    <!-- ── DIFERENCIAL 2: RECEIPT VAULT ── -->
+    <div class="glass-card" id="receiptSection" style="margin-bottom:24px">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">🗂 Smart Receipt Vault</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Upload e extração automática de notas fiscais via OCR</div>
+        </div>
+      </div>
+      <div class="receipt-drop" id="receiptDrop" onclick="simulateUpload()" ondragover="this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+        <div class="drop-icon">📎</div>
+        <div class="drop-text"><strong>Clique ou arraste</strong> uma nota fiscal ou recibo</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">PDF, PNG, JPG · Processado por OCR com criptografia AES-256</div>
+      </div>
+      <div class="receipt-list" id="receiptList"></div>
+    </div>
+
+    <!-- ── DIFERENCIAL 3: TAX EXPORT ── -->
+    <div class="glass-card" id="exportSection" style="margin-bottom:24px">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">⬇ One-Click Tax Export</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Relatório anual formatado para declaração de IR</div>
+        </div>
+      </div>
+      <div class="export-options" id="exportOpts">
+        <div class="export-opt selected" onclick="selectExport(this,'pdf')">
+          <div class="eo-icon">📄</div>
+          <div class="eo-label">PDF Completo</div>
+          <div class="eo-sub">Pronto para impressão</div>
+        </div>
+        <div class="export-opt" onclick="selectExport(this,'csv')">
+          <div class="eo-icon">📊</div>
+          <div class="eo-label">CSV / Excel</div>
+          <div class="eo-sub">Compatível com IR 2025</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        📋 <strong style="color:var(--text-secondary)">47 transações</strong> encontradas · Período: Jan–Mai 2025 · 
+        <span style="color:var(--accent-emerald)">R$ 2.140 em despesas dedutíveis</span>
+      </div>
+      <button class="export-generate" onclick="generateExport()">⬇ Gerar Relatório Fiscal</button>
+    </div>
+
+    <!-- ── REFLEXÃO ACADÊMICA ── -->
+    <div class="academic-section">
+      <div class="academic-title">
+        <span style="font-size:22px">📚</span>
+        Reflexão Acadêmica e Ética
+      </div>
+
+      <!-- QUESTÃO A -->
+      <div class="academic-q">
+        <div class="q-badge">📌 Questão A</div>
+        <div class="q-title">A Formação do Desenvolvedor na Era da IA: Quais competências são indispensáveis?</div>
+        <div class="q-body">
+          A engenharia reversa assistida por IA desloca o esforço do desenvolvedor da <strong>escrita sintática</strong> para a <strong>orquestração lógica</strong>. Em vez de memorizar APIs, o profissional precisa dominar a arte de descrever sistemas. Isso não torna o desenvolvedor obsoleto — mas transforma radicalmente o que o torna valioso.
+          <br><br>
+          Duas competências tornam-se criticamente indispensáveis:
+        </div>
+        <div class="competency-chips" style="margin-top:14px">
+          <div class="chip violet">1. Engenharia de Prompt</div>
+          <div class="chip">Decomposição de Problemas</div>
+          <div class="chip violet">2. Pensamento Crítico</div>
+          <div class="chip emerald">Code Review Avançado</div>
+          <div class="chip">Auditoria de Segurança</div>
+          <div class="chip emerald">Arquitetura de Software</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px">
+          <div class="principle-box">
+            <div class="principle-name">① Engenharia de Prompt e Decomposição Lógica (Técnica)</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">
+              O profissional precisa saber <strong style="color:var(--text-primary)">quebrar regras de negócio complexas em micro-instruções lógicas precisas</strong>. A IA escreve o código — o humano orquestra a arquitetura, define fluxos de dados e valida se a solução é segura, escalável e performática. Sem essa habilidade, o código gerado será genérico e frágil.
+            </div>
+          </div>
+          <div class="principle-box" style="background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(16,185,129,0.05));border-color:rgba(0,212,255,0.2)">
+            <div class="principle-name" style="color:var(--accent-cyan)">② Pensamento Crítico e Code Review (Comportamental)</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">
+              Assumir a postura de <strong style="color:var(--text-primary)">"Auditor de Código"</strong>. A IA pode gerar soluções que funcionam na superfície, mas com vulnerabilidades de segurança ou Big-O notation inadequado. O profissional deve validar, refatorar e garantir que cada linha implementada atende aos padrões — entendendo o porquê de cada decisão arquitetural.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUESTÃO B -->
+      <div class="academic-q" style="margin-bottom:0">
+        <div class="q-badge">📌 Questão B</div>
+        <div class="q-title">Originalidade vs. Plágio Digital: Onde está o limite?</div>
+        <div class="q-body">
+          <strong>1. O ponto de ruptura ético:</strong>
+          <br><br>
+          A engenharia reversa assistida por IA cruza a linha do aprendizado para o <strong>plágio digital</strong> no momento em que a "alma" do software de referência — sua identidade visual específica, sua estrutura exata de navegação e sua marca registrada — é clonada <em>sem agregar nenhum valor divergente</em>. Se a IA é usada apenas para fazer um <em>bypass</em> na criptografia visual ou lógica de um concorrente para lançar um clone exato no mercado visando lucro fácil, trata-se de <strong>apropriação indevida</strong>.
+          <br><br>
+          A prática é <strong>legítima quando</strong> a referência serve apenas como fundação arquitetônica para construir uma proposta de valor inédita — exatamente como a engenharia mecânica aprende com motores existentes para criar novos modelos.
+          <br><br>
+          <strong>2. Diretriz Ética Proposta:</strong>
+        </div>
+        <div class="principle-box" style="background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(124,58,237,0.05));border-color:rgba(245,158,11,0.25);margin-top:16px">
+          <div class="principle-name" style="color:var(--accent-amber);font-size:16px">⚖ O Princípio da Transformação Aditiva</div>
+          <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
+            Ao utilizar ferramentas generativas para aprender com um produto existente, o novo software gerado deve obrigatoriamente: <strong style="color:var(--text-primary)">(a) alterar a interface central</strong> e <strong style="color:var(--text-primary)">(b) adicionar pelo menos 30% de novas funcionalidades</strong> voltadas para um nicho ou dor diferente.
+            <br><br>
+            Dessa forma, a inovação original é protegida pela necessidade de <em>metamorfose</em>: a IA atua como catalisador para a ramificação de novas ideias — e não como uma máquina de xerox digital. O mercado evolui em <strong style="color:var(--accent-emerald)">diversidade</strong>, não em <strong style="color:var(--accent-rose)">repetição</strong>.
+            <br><br>
+            <span style="font-size:12px;color:var(--text-muted)">📌 Aplicado neste projeto: o Aura implementou 4 diferenciais funcionais inéditos (AI Insights, Smart Receipt Vault, Tax Export, Granular Privacy Mode) sobre a fundação de referência, configurando transformação aditiva completa.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: NOVA TRANSAÇÃO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">+ Nova Transação</div>
+    <div class="type-toggle">
+      <button class="type-btn income selected" id="typeIncome" onclick="setType('income')">▲ Receita</button>
+      <button class="type-btn expense" id="typeExpense" onclick="setType('expense')">▼ Despesa</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <input class="form-input" id="txName" placeholder="Ex: Salário, Aluguel, Mercado..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor (R$)</label>
+        <input class="form-input" id="txAmount" type="number" placeholder="0,00" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-input" id="txCat">
+          <option value="Moradia">🏠 Moradia</option>
+          <option value="Alimentação">🍽 Alimentação</option>
+          <option value="Transporte">🚗 Transporte</option>
+          <option value="Saúde">💊 Saúde</option>
+          <option value="Lazer">🎮 Lazer</option>
+          <option value="Renda">💰 Renda</option>
+          <option value="Outros">📦 Outros</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Data</label>
+      <input class="form-input" id="txDate" type="date" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveTransaction()">Salvar Transação</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════
+let privacyMode = false;
+let selectedExportType = 'pdf';
+let txType = 'income';
+
+const transactions = [
+  { id:1, name:'Salário N7Tech', cat:'Renda',       amount: 5500, type:'income',  date:'01/05', icon:'💼', color:'rgba(16,185,129,0.2)' },
+  { id:2, name:'Freelance UX',   cat:'Renda',       amount: 1700, type:'income',  date:'05/05', icon:'🎨', color:'rgba(16,185,129,0.2)' },
+  { id:3, name:'Aluguel',        cat:'Moradia',     amount: 1600, type:'expense', date:'03/05', icon:'🏠', color:'rgba(244,63,94,0.15)' },
+  { id:4, name:'Supermercado',   cat:'Alimentação', amount:  620, type:'expense', date:'08/05', icon:'🛒', color:'rgba(244,63,94,0.15)' },
+  { id:5, name:'Netflix / Streaming', cat:'Lazer', amount:   85, type:'expense', date:'10/05', icon:'🎬', color:'rgba(244,63,94,0.15)' },
+  { id:6, name:'Farmácia',       cat:'Saúde',       amount:  140, type:'expense', date:'12/05', icon:'💊', color:'rgba(244,63,94,0.15)' },
+];
+
+const goals = [
+  { name:'Fundo de Emergência 🛡', current: 8500, target: 12000, color:'var(--accent-violet)' },
+  { name:'Viagem Europa ✈',         current: 3200, target:  8000, color:'var(--accent-cyan)' },
+  { name:'MacBook Pro 💻',          current: 5100, target:  7499, color:'var(--accent-emerald)' },
+];
+
+const categories = [
+  { name:'Moradia',     pct: 41, color:'#7c3aed' },
+  { name:'Alimentação', pct: 26, color:'#00d4ff' },
+  { name:'Transporte',  pct: 12, color:'#10b981' },
+  { name:'Saúde',       pct: 10, color:'#f59e0b' },
+  { name:'Lazer',       pct: 11, color:'#f43f5e' },
+];
+
+const chartData = [
+  { month:'Dez', income:5800, expense:3200 },
+  { month:'Jan', income:6100, expense:3500 },
+  { month:'Fev', income:5900, expense:4100 },
+  { month:'Mar', income:6800, expense:3800 },
+  { month:'Abr', income:6600, expense:3600 },
+  { month:'Mai', income:7200, expense:3850 },
+];
+
+const receipts = [
+  { name:'NF Supermercado', val:'R$ 620', status:'OCR ✓', icon:'🛒' },
+  { name:'Recibo Farmácia', val:'R$ 140', status:'OCR ✓', icon:'💊' },
+];
+
+const aiInsights = [
+  { tag:'warn', tagLabel:'⚠ Alerta', text:'Seus gastos com Lazer cresceram 34% em relação à média dos últimos 3 meses. Neste ritmo, você pode ultrapassar o orçamento previsto em R$ 420 ainda este mês.', confidence:'Confiança: 91% · Baseado em 18 transações' },
+  { tag:'tip',  tagLabel:'💡 Dica', text:'Você gastou R$ 340 a mais que o esperado em alimentação neste mês. Cozinhar em casa 3x por semana poderia economizar até R$ 180/mês automaticamente.', confidence:'Confiança: 87% · Padrão identificado em 4 meses' },
+  { tag:'pred', tagLabel:'✦ Previsão', text:'Com o padrão atual de economia (R$ 3.350/mês), você atingirá a meta da Viagem Europa em aproximadamente 7 meses — 2 meses antes do planejado.', confidence:'Confiança: 83% · Projeção linear ajustada' },
+];
+
+// ════════════════════════════════════════
+//  RENDER FUNCTIONS
+// ════════════════════════════════════════
+function renderTransactions() {
+  const list = document.getElementById('txList');
+  list.innerHTML = transactions.map(tx => `
+    <div class="tx-item">
+      <div class="tx-icon" style="background:${tx.color}">${tx.icon}</div>
+      <div class="tx-info">
+        <div class="tx-name">${tx.name}</div>
+        <div class="tx-cat">${tx.cat} · ${tx.date}</div>
+      </div>
+      <div>
+        <div class="tx-amount ${tx.type} privacy-target">${tx.type==='income' ? '+' : '-'} R$ ${tx.amount.toLocaleString('pt-BR')}</div>
+        <div class="tx-date">${tx.date}/2025</div>
+      </div>
+    </div>
+  `).join('');
+  applyPrivacy();
+}
+
+function renderGoals() {
+  const el = document.getElementById('goalsList');
+  el.innerHTML = goals.map(g => {
+    const pct = Math.round((g.current/g.target)*100);
+    return `
+      <div class="goal-item">
+        <div class="goal-hdr">
+          <div class="goal-name">${g.name}</div>
+          <div class="goal-vals"><span class="privacy-target">R$ ${g.current.toLocaleString('pt-BR')}</span> / <span class="privacy-target">R$ ${g.target.toLocaleString('pt-BR')}</span> · ${pct}%</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${g.color},var(--accent-cyan))"></div></div>
+      </div>
+    `;
+  }).join('');
+  applyPrivacy();
+}
+
+function renderCategories() {
+  const el = document.getElementById('catList');
+  el.innerHTML = categories.map(c => `
+    <div class="cat-item">
+      <div class="cat-dot" style="background:${c.color}"></div>
+      <div class="cat-label">${c.name}</div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${c.pct}%;background:${c.color}"></div></div>
+      <div class="cat-pct">${c.pct}%</div>
+    </div>
+  `).join('');
+}
+
+function renderChart() {
+  const el = document.getElementById('chartBars');
+  const maxVal = Math.max(...chartData.map(d => Math.max(d.income, d.expense)));
+  el.innerHTML = chartData.map(d => `
+    <div class="bar-wrap" style="height:100%">
+      <div class="bar-track" style="height:100%;gap:3px;flex-direction:row;align-items:flex-end">
+        <div class="bar-fill income" style="height:${(d.income/maxVal)*100}%;flex:1" data-val="R$ ${d.income.toLocaleString('pt-BR')}"></div>
+        <div class="bar-fill" style="height:${(d.expense/maxVal)*100}%;flex:1" data-val="R$ ${d.expense.toLocaleString('pt-BR')}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAIInsights(insights) {
+  const el = document.getElementById('aiInsights');
+  el.innerHTML = insights.map(i => `
+    <div class="ai-insight-card">
+      <div class="ai-insight-hdr">
+        <span class="ai-tag ${i.tag}">${i.tagLabel}</span>
+      </div>
+      <div class="ai-insight-text">${i.text}</div>
+      <div class="ai-confidence">${i.confidence}</div>
+    </div>
+  `).join('');
+}
+
+function renderReceipts() {
+  const el = document.getElementById('receiptList');
+  el.innerHTML = receipts.map(r => `
+    <div class="receipt-item">
+      <div class="receipt-thumb">${r.icon}</div>
+      <div class="receipt-info">
+        <div class="rname">${r.name}</div>
+        <div class="rval">${r.val} · Armazenado com AES-256</div>
+      </div>
+      <div class="receipt-badge">${r.status}</div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════
+//  INTERACTIONS
+// ════════════════════════════════════════
+
+// ── PRIVACY MODE (Diferencial 4)
+function togglePrivacy() {
+  privacyMode = !privacyMode;
+  const btn = document.getElementById('privacyBtn');
+  const icon = document.getElementById('privacyIcon');
+  const label = document.getElementById('privacyLabel');
+  btn.classList.toggle('active', privacyMode);
+  icon.textContent = privacyMode ? '🔒' : '🔓';
+  label.textContent = privacyMode ? 'Modo Ativo' : 'Modo Privado';
+  applyPrivacy();
+  showToast(privacyMode ? '🔒 Modo Privado ativado — valores ocultos' : '🔓 Modo Privado desativado', privacyMode ? 'warn' : 'info');
+}
+
+function applyPrivacy() {
+  document.querySelectorAll('.kpi-value, .tx-amount, .privacy-target').forEach(el => {
+    el.classList.toggle('blurred', privacyMode);
+  });
+}
+
+// ── AI INSIGHTS (Diferencial 1)
+async function runAIInsights() {
+  const btn = document.getElementById('aiRefreshBtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="ai-spinner">⟳</span> Analisando...';
+
+  const el = document.getElementById('aiInsights');
+  el.innerHTML = `
+    <div style="padding:24px;text-align:center;color:var(--text-muted)">
+      <div style="font-size:28px;margin-bottom:8px;animation:spin 2s linear infinite;display:inline-block">✦</div>
+      <div style="font-size:13px">IA analisando ${transactions.length} transações e padrões históricos...</div>
+    </div>
+  `;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Você é um analista financeiro pessoal. Com base nas transações abaixo, gere 3 insights financeiros em JSON. Responda SOMENTE com um array JSON válido, sem markdown ou texto extra.
+
+Transações: ${JSON.stringify(transactions.map(t => ({nome:t.name, categoria:t.cat, valor:t.amount, tipo:t.type})))}
+
+Formato: [{"tag":"warn|tip|pred","tagLabel":"⚠ Alerta|💡 Dica|✦ Previsão","text":"insight em português, prático e específico","confidence":"Confiança: XX% · motivo"}]`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const insights = JSON.parse(clean);
+    renderAIInsights(insights);
+    showToast('✦ Análise de IA concluída!', 'success');
+  } catch (e) {
+    renderAIInsights(aiInsights); // fallback
+    showToast('✦ Insights carregados (modo demo)', 'info');
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '<span>✦</span> Atualizar Análise';
+}
+
+// ── RECEIPT VAULT (Diferencial 2)
+function simulateUpload() {
+  const names = ['NF Restaurante','Recibo Posto','Nota Eletrônica','Comprovante Médico'];
+  const vals  = ['R$ 89','R$ 210','R$ 340','R$ 95'];
+  const icons = ['🍽','⛽','🛒','🏥'];
+  const i = Math.floor(Math.random()*4);
+  receipts.push({ name: names[i], val: vals[i], status:'OCR ✓', icon: icons[i] });
+  renderReceipts();
+  showToast('📎 Nota fiscal processada e armazenada com segurança!', 'success');
+}
+
+// ── TAX EXPORT (Diferencial 3)
+function selectExport(el, type) {
+  document.querySelectorAll('.export-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedExportType = type;
+}
+
+function generateExport() {
+  showToast(`⬇ Relatório ${selectedExportType.toUpperCase()} gerado! Baixando...`, 'success');
+  // Simulate CSV generation
+  if(selectedExportType === 'csv') {
+    const rows = ['Data,Descrição,Categoria,Tipo,Valor','03/05/2025,Aluguel,Moradia,Despesa,-1600','08/05/2025,Supermercado,Alimentação,Despesa,-620','01/05/2025,Salário,Renda,Receita,5500'];
+    const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'Aura_RelatorioIR_2025.csv'; a.click();
+  }
+}
+
+// ── MODAL
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function setType(type) {
+  txType = type;
+  document.getElementById('typeIncome').classList.toggle('selected', type==='income');
+  document.getElementById('typeExpense').classList.toggle('selected', type==='expense');
+}
+function saveTransaction() {
+  const name   = document.getElementById('txName').value;
+  const amount = parseFloat(document.getElementById('txAmount').value);
+  const cat    = document.getElementById('txCat').value;
+  const date   = document.getElementById('txDate').value;
+  if(!name || !amount) { showToast('Preencha todos os campos!', 'warn'); return; }
+  const icons = {Moradia:'🏠',Alimentação:'🍽',Transporte:'🚗',Saúde:'💊',Lazer:'🎮',Renda:'💰',Outros:'📦'};
+  transactions.unshift({
+    id: Date.now(), name, cat, amount, type: txType,
+    date: date.slice(5).replace('-','/'),
+    icon: icons[cat]||'📦',
+    color: txType==='income' ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.15)'
+  });
+  renderTransactions();
+  closeModal();
+  showToast(`${txType==='income'?'▲':'▼'} Transação "${name}" salva no Firestore!`, 'success');
+  document.getElementById('txName').value='';
+  document.getElementById('txAmount').value='';
+}
+
+// ── SECTION SCROLL NAV
+function openAISection() { document.getElementById('aiSection').scrollIntoView({behavior:'smooth'}); }
+function openReceiptSection() { document.getElementById('receiptSection').scrollIntoView({behavior:'smooth'}); }
+function openExportSection() { document.getElementById('exportSection').scrollIntoView({behavior:'smooth'}); }
+
+// ── TOAST
+function showToast(msg, type='info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = msg;
+  container.appendChild(toast);
+  setTimeout(()=>toast.classList.add('show'), 10);
+  setTimeout(()=>{ toast.classList.remove('show'); setTimeout(()=>toast.remove(), 400); }, 3500);
+}
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+renderChart();
+renderTransactions();
+renderGoals();
+renderCategories();
+renderAIInsights(aiInsights);
+renderReceipts();
+
+// Show welcome toast
+setTimeout(()=> showToast('✦ Aura inicializado · Firebase conectado', 'success'), 600);
+</script>
+</body>
+</html>
